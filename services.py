@@ -1,8 +1,15 @@
 from input_validators import *
 import os
+import socket
 
 
 def host_scan():
+    port_dict = {}
+    with open("ports.txt") as f:
+        for line in f:
+            (key,val) = line.split(":")
+            port_dict[int(key)] = val
+
     os.system("cls")
     print("HOST SCAN\n")   
     print("---------------------------------------\n")
@@ -25,17 +32,27 @@ def host_scan():
 
     print("\nIniciando escaneamento...\n")
     print("PORTAS ABERTAS\n")
-    print("  PORTA    SERVIÇO ")
+    print(" PROTOCOLO     PORTA      SERVIÇO ")
     try:
         for port in range(port_init, port_end):
+            found = False
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            socket.setdefaulttimeout(0.5)
-
+            socket.setdefaulttimeout(0.4)
             if(s.connect_ex((host_ip, port)) == 0):
-                if port <= 1023: # Well known ports
-                    print("   {}   |   {}   \n".format(port, socket.getservbyport(port)))
-                else:
-                    print("{}\n".format(port))
+                try:
+                    print("    TCP  |     {}     |   {}   \n".format(port, socket.getservbyport(port, "tcp")))
+                    found = True
+                except:
+                    pass
+                try:
+                    print("    UDP  |     {}     |   {}   \n".format(port, socket.getservbyport(port, "udp")))
+                    found = True
+                except:
+                    pass
+                if not found:
+                    print("         |     {}     |   {}   \n".format(port, port_dict[port]))
+                print("-----------------------------------")
+                    
     except KeyboardInterrupt:
         print("Escaneamento encerrado\n")
     except socket.error:
